@@ -59,7 +59,7 @@ dnl pin(SPEAKER, PD7)
 
 /* port the sd-reader CS is attached to */
 ifdef(`conf_SD_READER', `
-  pin(SPI_CS_SD_READER, PC5, OUTPUT)
+  pin(SPI_CS_SD_READER, PB3, OUTPUT)
 ')
 pin(SOFT_SPI_MOSI, PD2)
 pin(SOFT_SPI_MISO, PD3)
