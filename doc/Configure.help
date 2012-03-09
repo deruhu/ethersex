@@ -834,7 +834,23 @@ SNMP_SUPPORT
 
   Make ADC, Hostname and Uptime available through SNMP.
 
-  Set default values for DESCRIPTION, LOCATION and CONTACT.
+  Set default values for DESCRIPTION, LOCATION, CONTACT and COMMUNITY STRING.
+
+SNMP Description
+SNMP_VALUE_DESCRIPTION
+  Description of the system.
+
+SNMP Location
+SNMP_VALUE_LOCATION
+  Location of the system.
+
+SNMP Contact
+SNMP_VALUE_CONTACT
+  Administrative contact.
+
+SNMP Community String
+SNMP_COMMUNITY_STRING
+  Community string used for read requests.
 
 Sendmail support (smtp)
 SENDMAIL_SUPPORT
@@ -1390,6 +1406,28 @@ I2C_PCF8574X_SUPPORT
    * Prompt for experimental code (CONFIG_EXPERIMENTAL)
 
   PCF8574 and PCF8574A Remote 8-bit I/O expander for I2C-bus
+
+Pin A0 on Vcc
+I2C_PCF8583_SUPPORT
+  Depends on:
+   * I2C Master Support (EXPERIMENTAL) (I2C_MASTER_SUPPORT)
+   * Prompt for experimental code (CONFIG_EXPERIMENTAL)
+
+  PCF8583 realtime clock for I2C-bus
+
+Pin A0 on Vcc
+I2C_PCF8583_A0_VCC
+  PCF8583 address selection
+
+Sync system clock
+I2C_PCF8583_SYNC
+  Keep the system time in sync with the chip by adjusting
+  the tick counter in the middle of a second. This will
+  prevent flapping of the second.
+
+Sync period in sec
+I2C_PCF8583_SYNC_PERIOD
+  Sync system time every n seconds
 
 I2C BMP085 barometric pressure sensor
 I2C_BMP085_SUPPORT
@@ -2514,8 +2552,11 @@ RFM12_ASK_FS20_SUPPORT
 
   Send FS20 commands.
 
-  RFM12 frequency has to be set to 868.300MHz. This is done in
-  Network --> IP over RFM12 --> RFM12 frequency
+  RFM12 frequency has to be set to 868.300MHz.
+
+  FS20 on the air protokoll is described here
+  http://fhz4linux.info/tiki-index.php?page=FS20+Protocol
+
 
 FHT
 RFM12_ASK_FHT_SUPPORT
@@ -2527,8 +2568,28 @@ RFM12_ASK_FHT_SUPPORT
 
   Send FHT commands.
 
-  RFM12 frequency has to be set to 868.300MHz. This is done in
-  Network --> IP over RFM12 --> RFM12 frequency
+  RFM12 frequency has to be set to 868.300MHz.
+
+  FHT on the air protokoll is described here
+  http://fhz4linux.info/tiki-index.php?page=FHT+protocol
+
+Pollin/Kangtai Powerswitch (IC 2272)
+RFM12_ASK_2272_SUPPORT
+  Depends on: 
+   * RFM12 frequency (RFM12_FREQ_433920)
+   * RFM12 ASK (RFM12_ASK_SUPPORT)
+   * RFM12 ASK send (RFM12_ASK_SENDER_SUPPORT)
+
+  Several hardware stores and Pollin also distribute a so-called
+  Funkschaltset consisting of a wireless remote control and radio
+  outlets 3-5.
+
+  The sockets are configurable via ten dipswitches. The remote control
+  house code can be set via DIP five switches. This code is taken from
+  the outlets. The remaining five dip switches are then available for
+  the five different outlets
+
+  RFM12 frequency has to be set to 422.920MHz..
 
 Start month (1-12)
 DST_BEGIN_MONTH
@@ -2578,3 +2639,71 @@ DST_END_DOW
   occurs and week 5 is the last week in which day d occurs.  Day 0
   is a Sunday.
 
+Serial RAM support
+SER_RAM_SUPPORT
+  Depends on: 
+
+  Enables support for serial interfaced RAM chips (connected via SPI, I2C 
+  or other serial interface).
+
+Microchip 23K256 SPI-RAM support
+SER_RAM_23K256_SUPPORT
+  Depends on: 
+   * Serial RAM support (SER_RAM_SUPPORT)
+
+  The Microchip 23K256 serial RAM chip provides 32kB RAM and is 
+  connected via SPI.
+
+Perform RAM Test on startup
+SER_RAM_23K256_RAMTEST
+  Depends on: 
+   * Debug 23K256 (DEBUG_SER_RAM_23K256)
+
+  Performs a RAM test during start up of ethersex. The whole RAM is written
+  then read out and compared with was was written before.
+
+I2C PCA9555 16bit Port extension
+I2C_PCA9555_SUPPORT
+  Depends on: 
+   * I2C Master Support (EXPERIMENTAL) (I2C_MASTER_SUPPORT)
+   * Prompt for experimental code (CONFIG_EXPERIMENTAL)
+
+  Enables support for the PCA9555 16-bit I2C Port extension
+
+Input Universe
+CONF_ARTNET_INUNIVERSE
+
+  Which universe will be broadcasted whenever a change occurs. 
+
+Output Universe
+CONF_ARTNET_OUTUNIVERSE
+
+  Which universe will be updated by an ArtNet controller.
+  (e.g. you want your PC to update Universe 1 on the ethersex
+  device)
+
+UDP Port
+CONF_ARTNET_PORT
+
+  on which UDP port ethersex listens for artnet data
+
+Art-Net Node
+ARTNET_SUPPORT
+  Depends on: 
+   * DMX Storage (EXPERIMENTAL) (DMX_STORAGE_SUPPORT)
+   * UDP support (UDP_SUPPORT)
+   * NET_MAX_FRAME_LENGTH > 571
+
+  Artnet needs at least a 572 byte network buffer to work. You can set the buffer size 
+  in "Network -> Network Buffer Size".
+
+Buffer Length
+HTTPLOG_BUFFER_LEN
+
+  The len for the internal buffer used for HTTPLOG strings. This
+  buffer is dynamicallay allocated for each request.
+
+Backlight support
+HD44780_BACKLIGHT_SUPPORT
+
+  Backlight support for HD44780 LCD with direct connection.
