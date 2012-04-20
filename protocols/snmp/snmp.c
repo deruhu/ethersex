@@ -23,12 +23,21 @@
 
 #include <avr/io.h>
 #include <avr/pgmspace.h>
+#include <stdlib.h>
+#include <string.h>
 #include "config.h"
 #include "core/debug.h"
 #include "core/bit-macros.h"
 #include "services/clock/clock.h"
 #include "snmp.h"
 
+#ifdef ADC_SUPPORT
+#include "hardware/adc/adc.h"
+#endif
+
+#ifdef ONEWIRE_SNMP_SUPPORT
+#include "hardware/onewire/onewire.h"
+#endif
 
 #ifdef SNMP_SUPPORT
 
@@ -95,18 +104,115 @@ adc_reaction(uint8_t * ptr, struct snmp_varbinding * bind, void *userdata)
   {
     return 0;
   }
-  ADMUX = (ADMUX & 0xF0) | bind->data[0];
-  /* Start adc conversion */
-  ADCSRA |= _BV(ADSC);
-  /* Wait for completion of adc */
-  loop_until_bit_is_clear(ADCSRA, ADSC);
-  return encode_int(ptr, ADC);
+  return encode_int(ptr, adc_get(bind->data[0]));
 }
+
+#ifdef ADC_VOLTAGE_SUPPORT
+
+uint8_t
+adc_volt_reaction(uint8_t * ptr, struct snmp_varbinding * bind,
+                  void *userdata)
+{
+  if (bind->len != 1 || bind->data[0] >= ADC_CHANNELS)
+  {
+    return 0;
+  }
+  return encode_int(ptr, adc_get_voltage(bind->data[0]));
+}
+
+uint8_t
+adc_vref_reaction(uint8_t * ptr, struct snmp_varbinding * bind,
+                  void *userdata)
+{
+  if (bind->len != 1 || bind->data[0] >= ADC_CHANNELS)
+  {
+    return 0;
+  }
+  return encode_int(ptr, adc_get_vref());
+}
+
+#endif
 
 uint8_t
 adc_next(uint8_t * ptr, struct snmp_varbinding * bind)
 {
   return onelevel_next(ptr, bind, ADC_CHANNELS);
+}
+#endif
+
+#ifdef ONEWIRE_SNMP_SUPPORT
+uint8_t
+ow_rom_reaction(uint8_t * ptr, struct snmp_varbinding * bind, void *userdata)
+{
+  if (bind->len != 1 || bind->data[0] >= OW_SENSORS_COUNT)
+  {
+    return 0;
+  }
+  uint8_t i = bind->data[0];
+
+  ptr[0] = SNMP_TYPE_STRING;
+  ptr[1] = (uint8_t) snprintf_P((char *) (ptr + 2), 17,
+                                PSTR("%02x%02x%02x%02x%02x%02x%02x%02x"),
+                                ow_sensors[i].ow_rom_code.bytewise[0],
+                                ow_sensors[i].ow_rom_code.bytewise[1],
+                                ow_sensors[i].ow_rom_code.bytewise[2],
+                                ow_sensors[i].ow_rom_code.bytewise[3],
+                                ow_sensors[i].ow_rom_code.bytewise[4],
+                                ow_sensors[i].ow_rom_code.bytewise[5],
+                                ow_sensors[i].ow_rom_code.bytewise[6],
+                                ow_sensors[i].ow_rom_code.bytewise[7]);
+  return ptr[1] + 2;
+}
+
+#ifdef ONEWIRE_NAMING_SUPPORT
+uint8_t
+ow_name_reaction(uint8_t * ptr, struct snmp_varbinding * bind, void *userdata)
+{
+  if (bind->len != 1 || bind->data[0] >= OW_SENSORS_COUNT)
+  {
+    return 0;
+  }
+  uint8_t i = bind->data[0];
+
+  ptr[0] = SNMP_TYPE_STRING;
+  ptr[1] = 0;
+  if (ow_sensors[i].named)
+  {
+    ptr[1] = (uint8_t) snprintf_P((char *) (ptr + 2), OW_NAME_LENGTH,
+                                  PSTR("%s"), ow_sensors[i].name);
+  }
+  return ptr[1] + 2;
+}
+#endif
+
+uint8_t
+ow_temp_reaction(uint8_t * ptr, struct snmp_varbinding * bind, void *userdata)
+{
+  if (bind->len != 1 || bind->data[0] >= OW_SENSORS_COUNT)
+  {
+    return 0;
+  }
+  uint8_t i = bind->data[0];
+
+  return encode_int(ptr, ow_sensors[i].temp);
+}
+
+uint8_t
+ow_present_reaction(uint8_t * ptr, struct snmp_varbinding * bind, void *userdata)
+{
+  if (bind->len != 1 || bind->data[0] >= OW_SENSORS_COUNT)
+  {
+    return 0;
+  }
+  uint8_t i = bind->data[0];
+
+  return encode_int(ptr, ow_sensors[i].present);
+}
+
+uint8_t
+ow_next(uint8_t * ptr, struct snmp_varbinding * bind)
+{
+  return onelevel_next(ptr, bind, OW_SENSORS_COUNT);
 }
 #endif
 
@@ -123,6 +229,10 @@ string_pgm_reaction(uint8_t * ptr, struct snmp_varbinding * bind,
   memcpy_P(ptr + 2, userdata, ptr[1]);
   return ptr[1] + 2;
 }
+
+/**********************************************************
+ * mib data
+ **********************************************************/
 
 const char desc_value[] PROGMEM = SNMP_VALUE_DESCRIPTION;
 const char desc_obj_name[] PROGMEM = "\x2b\x06\x01\x02\x01\x01\x01";
@@ -142,6 +252,19 @@ const char location_obj_name[] PROGMEM = "\x2b\x06\x01\x02\x01\x01\x06";
 
 #ifdef ADC_SUPPORT
 const char adc_reaction_obj_name[] PROGMEM = ethersexExperimental "\x01";
+#ifdef ADC_VOLTAGE_SUPPORT
+const char adc_volt_reaction_obj_name[] PROGMEM = ethersexExperimental "\x02\x02";
+const char adc_vref_reaction_obj_name[] PROGMEM = ethersexExperimental "\x02\x03";
+#endif
+#endif
+
+#ifdef ONEWIRE_SNMP_SUPPORT
+const char ow_rom_reaction_obj_name[] PROGMEM = ethersexExperimental "\x03\x01";
+#ifdef ONEWIRE_NAMING_SUPPORT
+const char ow_name_reaction_obj_name[] PROGMEM = ethersexExperimental "\x03\x02";
+#endif
+const char ow_temp_reaction_obj_name[] PROGMEM = ethersexExperimental "\x03\x03";
+const char ow_present_reaction_obj_name[] PROGMEM = ethersexExperimental "\x03\x04";
 #endif
 
 const struct snmp_reaction snmp_reactions[] PROGMEM = {
@@ -154,6 +277,18 @@ const struct snmp_reaction snmp_reactions[] PROGMEM = {
   {location_obj_name, string_pgm_reaction, (void *) location_value, NULL},
 #ifdef ADC_SUPPORT
   {adc_reaction_obj_name, adc_reaction, NULL, adc_next},
+#ifdef ADC_VOLTAGE_SUPPORT
+  {adc_volt_reaction_obj_name, adc_volt_reaction, NULL, adc_next},
+  {adc_vref_reaction_obj_name, adc_vref_reaction, NULL, adc_next},
+#endif
+#endif
+#ifdef ONEWIRE_SNMP_SUPPORT
+  {ow_rom_reaction_obj_name, ow_rom_reaction, NULL, ow_next},
+#ifdef ONEWIRE_NAMING_SUPPORT
+  {ow_name_reaction_obj_name, ow_name_reaction, NULL, ow_next},
+#endif
+  {ow_temp_reaction_obj_name, ow_temp_reaction, NULL, ow_next},
+  {ow_present_reaction_obj_name, ow_present_reaction, NULL, ow_next},
 #endif
   {NULL, NULL, NULL, NULL}
 };
