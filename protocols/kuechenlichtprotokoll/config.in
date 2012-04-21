@@ -1,0 +1,11 @@
+dep_bool_menu "Kuechenlicht-Support" KUECHENLICHT_SUPPORT $UDP_SUPPORT
+  dep_bool "UDP" KUECHENLICHT_UDP_SUPPORT $UDP_SUPPORT
+  if [ "$ECMD_UDP_SUPPORT" = "y" ]; then
+    int " UDP Port" ECMD_UDP_PORT 2715
+  fi
+  
+  comment  "Debugging Flags"
+  dep_bool 'KUECHENLICHT' DEBUG_KUECHENLICHT $DEBUG
+  dep_bool 'UDP-KUECHENLICHT' DEBUG_KUECHENLICHT_UDP $DEBUG $UDP_SUPPORT
+
+endmenu
