@@ -21,7 +21,73 @@
 #ifndef KUECHENPROTO_UDP_H
 #define KUECHENPROTO_UDP_H
 
+//magic
+#define		KUECHENLICHT_MAGIC			0xABCD
+
+//Nachrichten:
+
+//Commands:
+#define		KUECHENLICHT_ID_CMD_SET		0xC001
+
+//Responds:
+#define		KUECHENLICHT_ID_RSP_SET		0xA001
+
+//Stati:
+#define		KUECHENLICHT_ID_STAT_STATUS	0xB001
+
+typedef struct
+{
+	uint16_t	magic;
+	uint32_t	senderAddress;
+	uint16_t	messageID;
+	uint16_t	messageLength;
+}kuechenLichtHeader;
+
+typedef struct
+{
+	uint8_t		rot;
+	uint8_t		gruen;
+	uint8_t		blau;
+	bool		schalter;
+}kuechenLichtLEDStatus;
+
+typedef struct
+{
+	kuechenLichtHeader		kHeader;
+
+	kuechenLichtLEDStatus	kLEDStatus;
+
+	uint8_t					checksum;
+	uint8_t					lock;
+	uint8_t					prioritaet;
+}kuechenLicht_cmd_set;
+
+typedef struct
+{
+	kuechenLichtHeader		kHeader;
+
+	kuechenLichtLEDStatus	kLEDStatus;
+
+	uint8_t					checksum;
+	bool					done;
+}kuechenLicht_rsp_set;
+
+
+
+typedef struct
+{
+	kuechenLichtHeader		kHeader;
+
+	kuechenLichtLEDStatus	kLEDStatus;
+
+	uint32_t				lastSender;
+
+}kuechenLichtStatus;
+
+
 void kuechenproto_net_init(void);
 void kuechenproto_net_main(void);
+void handleKuechenLichtSetCommand(kuechenLicht_cmd_set*);
+
 
 #endif /* KUECHENLICHT_UDP_H */

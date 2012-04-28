@@ -33,6 +33,22 @@
 
 #define BUF ((struct uip_udpip_hdr *) (uip_appdata - UIP_IPUDPH_LEN))
 
+kuechenLichtStatus status={
+		{
+		 KUECHENLICHT_MAGIC,
+		 0,
+		 0,
+		 KUECHENLICHT_ID_STAT_STATUS,
+		 sizeof(kuechenLichtStatus)
+		},
+		{
+		 0,
+		 0,
+		 0,
+		 0,
+		},
+		 0};
+
 void kuechenproto_net_init() {
 	uip_ipaddr_t ip;
 	uip_ipaddr_copy(&ip, all_ones_addr);
@@ -44,58 +60,129 @@ void kuechenproto_net_init() {
 	}
 
 	uip_udp_bind (kuechen_conn, HTONS(KUECHENLICHT_UDP_PORT));
+
+	DDRB |= (1<<OC1A) | (1<<OC1B); // Ports OC1A, OC1B mit angeschlossener LED als Ausgang
+	TCCR1A = (1<<WGM11) | (1<<WGM12) | (1<<WGM13) & ~(1<<WGM10) | (1<<COM1A1) | (1<<COM1B1); // PWM, fast, 16 bit.
+	TCCR1B = (1<<CS10) & ~(1<<CS11) & ~(1<<CS12); // Prescaler 1 = Enable counter
+
+	TCCR2B = (1<<CS21);
+	TIMSK2 = (1<<OCIE2A)|(1<<TOIE2)
+
+	ICR1=0xffff;
+
+	OCR1A=0;
+	OCR1B=0;
+
+	OCR2A=0x0;
 }
 
 void kuechenproto_net_main() {
 	if (!uip_newdata ())
 		return;
+	uint16_t datalength=uip_datalen();
+	int16_t i=0;
 
-	char *p = (char *)uip_appdata;
-
-	/* Add \0 to the data and remove \n from the data */
-	do {
-		if (*p == '\r' || *p == '\n') {
-			break;
+	while((datalength-i)>=sizeof(kuechenLichtHeader))
+	{
+		kuechenLichtHeader* pParseHeader = (kuechenLichtHeader*)(uip_appdata+i);
+		if(*pParseHeader->magic!=KUECHENLICHT_MAGIC)
+		{
+			debug_printf("Kuenchenlicht: received non-Kuechenlicht message (wrong header->magic)\n");
+			i++;
 		}
-	} while ( ++p <= ((char *)uip_appdata + uip_datalen()));
 
-	/* Parse the Data */
-	*p = 0;
-	char cmd[p - (char *)uip_appdata];
+		else
+		{
+			debug_printf("Kuenchenlicht: received message, parsing started\n");
 
-	strncpy(cmd, uip_appdata, p - (char *)uip_appdata + 1);
 
-	uip_slen = 0;
-	while (uip_slen < UIP_BUFSIZE - UIP_IPUDPH_LEN) {
-		int16_t len = ecmd_parse_command(cmd, ((char *)uip_appdata) + uip_slen,
-						 (UIP_BUFSIZE - UIP_IPUDPH_LEN) - uip_slen);
-		uint8_t real_len = len;
-		if (!is_ECMD_FINAL(len)) { /* what about the errors ? */
-			/* convert ECMD_AGAIN back to ECMD_FINAL */
-			real_len = (uint8_t) ECMD_AGAIN(len);
+			switch (pParseHeader->messageID)
+			{
+			case KUECHENLICHT_ID_CMD_SET:
+				if ((datalength-i)>=sizeof(kuechenLicht_cmd_set))
+					handleKuechenLichtSetCommand((kuechenLicht_cmd_set*)pParseHeader);
+					i+=sizeof(kuechenLicht_cmd_set);
+				break;
+
+			default:
+				debug_printf("Kuenchenlicht: unknown messageID received\n");
+				i++;
+				break;
+			}
 		}
-		uip_slen += real_len + 1;
-		((char *)uip_appdata)[uip_slen - 1] = '\n';
-		if (real_len == len || len == 0)
-			break;
 	}
 
-	/* Sent data out */
 
-	uip_udp_conn_t echo_conn;
-	uip_ipaddr_copy(echo_conn.ripaddr, BUF->srcipaddr);
-	echo_conn.rport = BUF->srcport;
-	echo_conn.lport = HTONS(ECMD_UDP_PORT);
 
-	uip_udp_conn = &echo_conn;
-	uip_process(UIP_UDP_SEND_CONN);
-	router_output();
+		for(i=0;i<4;++i)
+		{
+			led[i]=*(++pMessage);
+		}
 
-	uip_slen = 0;
+		if led[3]!=led[0]^led[1]^led[2];
+		{
+			debug_printf("Kuechenlicht: checksum-check failed\n");
+			return;
+		}
+		else debug_printf("Kuenchenlicht: colour received\n");
+
+
+
+		/* Add \0 to the data and remove \n from the data */
+		do
+		{
+			if (*pMessage == '\r' || *pMessage == '\n') {
+				break;
+			}
+		} while ( ++pMessage <= ((char *)uip_appdata + uip_datalen()));
+
+		/* Parse the Data */
+		*pMessage = 0;
+		char cmd[pMessage - (char *)uip_appdata];
+
+		strncpy(cmd, uip_appdata, pMessage - (char *)uip_appdata + 1);
+
+		uip_slen = 0;
+		while (uip_slen < UIP_BUFSIZE - UIP_IPUDPH_LEN) {
+			int16_t len = ecmd_parse_command(cmd, ((char *)uip_appdata) + uip_slen,
+					(UIP_BUFSIZE - UIP_IPUDPH_LEN) - uip_slen);
+			uint8_t real_len = len;
+			if (!is_ECMD_FINAL(len)) { /* what about the errors ? */
+				/* convert ECMD_AGAIN back to ECMD_FINAL */
+				real_len = (uint8_t) ECMD_AGAIN(len);
+			}
+			uip_slen += real_len + 1;
+			((char *)uip_appdata)[uip_slen - 1] = '\n';
+			if (real_len == len || len == 0)
+				break;
+		}
+
+		/* Sent data out */
+
+		uip_udp_conn_t echo_conn;
+		uip_ipaddr_copy(echo_conn.ripaddr, BUF->srcipaddr);
+		echo_conn.rport = BUF->srcport;
+		echo_conn.lport = HTONS(ECMD_UDP_PORT);
+
+		uip_udp_conn = &echo_conn;
+		uip_process(UIP_UDP_SEND_CONN);
+		router_output();
+
+		uip_slen = 0;
+
+
+}
+
+void handleKuechenLichtSetCommand(kuechenLicht_cmd_set* pSetCommand)
+{
+	if(pSetCommand->checksum==(pSetCommand->kLEDStatus.rot ^ pSetCommand->kLEDStatus.blau ^ pSetCommand->kLEDStatus.gruen))
+		status.kLEDStatus=pSetCommand->kLEDStatus;
+
+	return;
 }
 
 /*
   -- Ethersex META --
-  header(protocols/ecmd/via_udp/uecmd_net.h)
-  net_init(uecmd_net_init)
+  header(protocols/kuechenlichtprotikoll/udpkuechenlicht.h)
+  net_init(kuechenproto_net_init)
 */
