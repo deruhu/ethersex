@@ -73,7 +73,6 @@ typedef struct
 }kuechenLicht_rsp_set;
 
 
-
 typedef struct
 {
 	kuechenLichtHeader		kHeader;

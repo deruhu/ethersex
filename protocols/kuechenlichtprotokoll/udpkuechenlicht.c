@@ -170,7 +170,6 @@ void kuechenproto_net_main() {
 
 		uip_slen = 0;
 
-
 }
 
 void handleKuechenLichtSetCommand(kuechenLicht_cmd_set* pSetCommand)
