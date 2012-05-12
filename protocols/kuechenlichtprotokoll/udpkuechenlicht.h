@@ -21,16 +21,23 @@
 #ifndef KUECHENPROTO_UDP_H
 #define KUECHENPROTO_UDP_H
 
+//Port:
+#define 	KUECHENLICHT_UDP_BC_PORT	5898
+#define         KUECHENLICHT_UDP_CMD_PORT       5899
+
 //magic
-#define		KUECHENLICHT_MAGIC			0xABCD
+#define		KUECHENLICHT_MAGIC		0xABCD
 
 //Nachrichten:
 
 //Commands:
 #define		KUECHENLICHT_ID_CMD_SET		0xC001
+#define		KUECHENLICHT_ID_CMD_CAYF	0xC002
+#define         KUECHENLICHT_ID_CMD_GOTCHA      0xC003
 
 //Responds:
 #define		KUECHENLICHT_ID_RSP_SET		0xA001
+#define		KUECHENLICHT_ID_RSP_CAYF	0xA002
 
 //Stati:
 #define		KUECHENLICHT_ID_STAT_STATUS	0xB001
@@ -38,6 +45,7 @@
 typedef struct
 {
 	uint16_t	magic;
+	uint32_t        modulAddress;
 	uint32_t	senderAddress;
 	uint16_t	messageID;
 	uint16_t	messageLength;
@@ -48,38 +56,60 @@ typedef struct
 	uint8_t		rot;
 	uint8_t		gruen;
 	uint8_t		blau;
-	bool		schalter;
 }kuechenLichtLEDStatus;
 
 typedef struct
 {
-	kuechenLichtHeader		kHeader;
+	kuechenLichtHeader                      kHeader;
 
-	kuechenLichtLEDStatus	kLEDStatus;
+	kuechenLichtLEDStatus                   kLEDStatus;
 
 	uint8_t					checksum;
-	uint8_t					lock;
-	uint8_t					prioritaet;
 }kuechenLicht_cmd_set;
 
 typedef struct
 {
-	kuechenLichtHeader		kHeader;
+	kuechenLichtHeader                      kHeader;
 
-	kuechenLichtLEDStatus	kLEDStatus;
+	kuechenLichtLEDStatus                   kLEDStatus;
 
 	uint8_t					checksum;
-	bool					done;
+
+	bool					an;
 }kuechenLicht_rsp_set;
+
+typedef struct
+{
+	kuechenLichtHeader                      kHeader;
+
+	uint8_t					kNumberofCalls;
+
+}kuechenLicht_cmd_come_all_ye_faithful;
+
+typedef struct
+{
+        kuechenLichtHeader                      kHeader;
+
+        kuechenLichtLEDStatus                   kLEDStatus;
+
+        uint8_t                                 kReactedtoCall;
+
+	bool					an;
+}kuechenLicht_rsp_cayf;
+
+typedef struct
+{
+        kuechenLichtHeader                      kHeader;
+
+        bool					gotcha;
+}kuechenLicht_cmd_gotcha;
 
 
 typedef struct
 {
-	kuechenLichtHeader		kHeader;
+	kuechenLichtHeader                      kHeader;
 
-	kuechenLichtLEDStatus	kLEDStatus;
-
-	uint32_t				lastSender;
+	kuechenLichtLEDStatus                   kLEDStatus;
 
 }kuechenLichtStatus;
 
