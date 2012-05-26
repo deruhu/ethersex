@@ -22,103 +22,108 @@
 #define KUECHENPROTO_UDP_H
 
 //Port:
-#define 	KUECHENLICHT_UDP_BC_MYPORT	13897
-#define 	KUECHENLICHT_UDP_BC_PORT	13898
-#define         KUECHENLICHT_UDP_CMD_PORT       13899
-#define         KUECHENLICHT_UDP_TEST_PORT      13901
+#define     KUECHENLICHT_UDP_BC_MYPORT      13897
+#define     KUECHENLICHT_UDP_BC_PORT        13898
+#define     KUECHENLICHT_UDP_CMD_PORT       13899
+//#define     KUECHENLICHT_UDP_TEST_PORT      13901
 
 //magic
-#define		KUECHENLICHT_MAGIC		0xABCD
+#define     KUECHENLICHT_MAGIC              0xABCD
 
 //Nachrichten:
 
 //Commands:
-#define		KUECHENLICHT_ID_CMD_SET		0xC001
-#define		KUECHENLICHT_ID_CMD_CAYF	0xC002
-#define         KUECHENLICHT_ID_CMD_GOTCHA      0xC003
+#define     KUECHENLICHT_ID_CMD_SET         0xC001
+#define     KUECHENLICHT_ID_CMD_CAYF        0xC002
+#define     KUECHENLICHT_ID_CMD_GOTCHA      0xC003
 
 //Responds:
-#define		KUECHENLICHT_ID_RSP_SET		0xA001
-#define		KUECHENLICHT_ID_RSP_CAYF	0xA002
+#define     KUECHENLICHT_ID_RSP_SET         0xA001
+#define     KUECHENLICHT_ID_RSP_CAYF        0xA002
 
 //Stati:
-#define		KUECHENLICHT_ID_STAT_STATUS	0xB001
+#define     KUECHENLICHT_ID_STAT_STATUS     0xB001
 
 typedef struct
 {
-	uint16_t	magic;
-	uint32_t        modulAddress;
-	uint32_t	senderAddress;
-	uint16_t	messageID;
-	uint16_t	messageLength;
+    uint16_t            magic;
+    uint32_t            modulAddress;
+    uint32_t            senderAddress;
+    uint16_t            messageID;
+    uint16_t            messageLength;
 }kuechenLichtHeader;
 
 typedef struct
 {
-	uint8_t		rot;
-	uint8_t		gruen;
-	uint8_t		blau;
+    uint8_t                rot;
+    uint8_t                gruen;
+    uint8_t                blau;
 }kuechenLichtLEDStatus;
 
 typedef struct
 {
-	kuechenLichtHeader                      kHeader;
+    kuechenLichtHeader      kHeader;
 
-	kuechenLichtLEDStatus                   kLEDStatus;
+    kuechenLichtLEDStatus   kLEDStatus;
 
-	uint8_t					checksum;
+    uint8_t                 checksum;
 }kuechenLicht_cmd_set;
 
 typedef struct
 {
-	kuechenLichtHeader                      kHeader;
+    kuechenLichtHeader      kHeader;
 
-	kuechenLichtLEDStatus                   kLEDStatus;
+    kuechenLichtLEDStatus   kLEDStatus;
 
-	uint8_t					checksum;
+    uint8_t                 checksum;
 
-	bool					an;
+    bool                    an;
 }kuechenLicht_rsp_set;
 
 typedef struct
 {
-	kuechenLichtHeader                      kHeader;
+    kuechenLichtHeader      kHeader;
 
-	uint8_t					kNumberofCalls;
+    uint8_t                 kNumberofCalls;
 
 }kuechenLicht_cmd_come_all_ye_faithful;
 
 typedef struct
 {
-        kuechenLichtHeader                      kHeader;
+    kuechenLichtHeader      kHeader;
 
-        kuechenLichtLEDStatus                   kLEDStatus;
+    kuechenLichtLEDStatus   kLEDStatus;
 
-        uint8_t                                 kReactedtoCall;
+    uint8_t                 kReactedtoCall;
 
-	bool					an;
+    bool                    an;
 }kuechenLicht_rsp_cayf;
 
 typedef struct
 {
-        kuechenLichtHeader                      kHeader;
+    kuechenLichtHeader      kHeader;
 
-        bool					gotcha;
+    bool                    gotcha;
 }kuechenLicht_cmd_gotcha;
 
 
 typedef struct
 {
-	kuechenLichtHeader                      kHeader;
+    kuechenLichtHeader      kHeader;
 
-	kuechenLichtLEDStatus                   kLEDStatus;
+    kuechenLichtLEDStatus   kLEDStatus;
 
 }kuechenLichtStatus;
 
+#ifdef KUECHENLICHT_ETHER
 
 void kuechenproto_net_init(void);
-void kuechenproto_net_main(void);
+void kuechenproto_net_cmd_handler(void);
+void kuechenproto_net_bc_handler(void);
 void handleKuechenLichtSetCommand(kuechenLicht_cmd_set*);
+void handleKuechenLichtCAYFCommand(kuechenLicht_cmd_come_all_ye_faithful*);
+void handleKuechenLichtGotchaCommand(kuechenLicht_cmd_gotcha*);
 
+#endif /*KUECHENLICHT_ETHER*/
 
 #endif /* KUECHENLICHT_UDP_H */

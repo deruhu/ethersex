@@ -18,6 +18,7 @@
  * For more information on the GPL, please go to:
  * http://www.gnu.org/copyleft/gpl.html
  */
+#define KUECHENLICHT_ETHER
 
 #include <string.h>
 #include "uecmd_net.h"
@@ -28,6 +29,7 @@
 #include "protocols/ecmd/ecmd-base.h"
 
 #include "config.h"
+
 
 #define BUF ((struct uip_udpip_hdr *) (uip_appdata - UIP_IPUDPH_LEN))
 
