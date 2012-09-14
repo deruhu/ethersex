@@ -51,6 +51,8 @@ volatile kuechenLichtStatus status={
         },
         0};
 
+volatile uint16_t mTimer2value=0
+
 const uint16_t gammakorr[256]={ 0,1,2,4,7,12,18,24,33,42,53,65,79,94,111,129,
         149,170,193,217,243,270,299,330,362,396,432,469,508,549,592,636,
         682,730,779,830,883,938,995,1053,1114,1176,1240,1306,1373,1443,1514,1588,
@@ -149,6 +151,8 @@ void kuechenproto_net_cmd_handler() {
 
     OCR1A=gammakorr[status.kLEDStatus.rot];
     OCR1B=gammakorr[status.kLEDStatus.gruen];
+
+
 
 }
 
@@ -250,6 +254,19 @@ void handleKuechenLichtCAYFCommand(kuechenLicht_cmd_come_all_ye_faithful* pCAYFC
 void handleKuechenLichtGotchaCommand(kuechenLicht_cmd_gotcha* pGotchaCommand)
 {
 
+}
+
+ISR(TIMER1_OVF_vect)
+{
+    /*
+     * BLAU=1;
+     * Timer 2 mit niedrigem Teiler starten
+     * Timer 2 overflow interrupt, jedesmal uint8_t +1
+     * wenn overflowwert==HIGH(Blauwert), dann compare-interrupt aktivieren und==LOW(Blauwert)setzen
+     * bei compare-Interrupt BLAU=0
+     *
+     * VORSICHT: wenn der Low-Wert nahe 0 ist, dann bereits in der overflowphase auf 0 setzen
+     */
 }
 
 /*
