@@ -134,7 +134,7 @@ dnl Configure pin-change-mask to monitor PCINTn and enable interrupt
 #define rfm12_int_disable() \
   do { \
     _paste(PCMSK, eval($1/8)) &= ~_BV(PCINT$1); \
-    PCICR  &= ~_BV(_paste(PCIE, eval($1/8)));	\
+    PCICR  &= ~_BV(_paste(PCIE, eval($1/8)));   \
   } while(0)
 
 #define RFM12_VECTOR _paste3(PCINT, eval($1/8), _vect)
@@ -248,7 +248,7 @@ define(`stop', substr(`$2', 2, 1))dnl
 #undef MOTORCURTAIN_PIN_PIN
 #undef HAVE_MOTORCURTAIN_PIN  /* quite a hack, but should do the job *g*    \
                            this is just to keep the preprocessor from \
-			   complaining and get the port masks right. */
+               complaining and get the port masks right. */
 pin(MOTORCURTAIN_PIN, format(`P%s%d', pinname, itr))
   ' )dnl
 #define MOCU_SENSOR_COUNT eval(stop-start+1)
@@ -261,17 +261,17 @@ pin(MOTORCURTAIN_PIN, format(`P%s%d', pinname, itr))
 define(`STELLA_USE_TIMER', `dnl
 
 /* Configure stella timer */
-#define STELLA_TC_PRESCALER_1024	format(TC%s_PRESCALER_1024, $1)
-#define STELLA_TC_PRESCALER_256		format(TC%s_PRESCALER_256, $1)
-#define STELLA_TC_PRESCALER_128		format(TC%s_PRESCALER_128, $1)
-#define STELLA_TC_PRESCALER_64		format(TC%s_PRESCALER_64, $1)
-#define STELLA_TC_INT_COMPARE_ON	format(TC%s_INT_COMPARE_ON, $1)
-#define STELLA_TC_INT_COMPARE_OFF	format(TC%s_INT_COMPARE_OFF, $1)
-#define STELLA_TC_INT_OVERFLOW_ON	format(TC%s_INT_OVERFLOW_ON, $1)
-#define STELLA_TC_INT_OVERFLOW_OFF	format(TC%s_INT_OVERFLOW_OFF, $1)
-#define STELLA_TC_VECTOR_COMPARE	format(TC%s_VECTOR_COMPARE, $1)
-#define STELLA_TC_VECTOR_OVERFLOW	format(TC%s_VECTOR_OVERFLOW, $1)
-#define STELLA_TC_COMPARE_REG 		format(TC%s_COUNTER_COMPARE, $1)
+#define STELLA_TC_PRESCALER_1024    format(TC%s_PRESCALER_1024, $1)
+#define STELLA_TC_PRESCALER_256     format(TC%s_PRESCALER_256, $1)
+#define STELLA_TC_PRESCALER_128     format(TC%s_PRESCALER_128, $1)
+#define STELLA_TC_PRESCALER_64      format(TC%s_PRESCALER_64, $1)
+#define STELLA_TC_INT_COMPARE_ON    format(TC%s_INT_COMPARE_ON, $1)
+#define STELLA_TC_INT_COMPARE_OFF   format(TC%s_INT_COMPARE_OFF, $1)
+#define STELLA_TC_INT_OVERFLOW_ON   format(TC%s_INT_OVERFLOW_ON, $1)
+#define STELLA_TC_INT_OVERFLOW_OFF  format(TC%s_INT_OVERFLOW_OFF, $1)
+#define STELLA_TC_VECTOR_COMPARE    format(TC%s_VECTOR_COMPARE, $1)
+#define STELLA_TC_VECTOR_OVERFLOW   format(TC%s_VECTOR_OVERFLOW, $1)
+#define STELLA_TC_COMPARE_REG       format(TC%s_COUNTER_COMPARE, $1)
 ')
 
 
@@ -285,7 +285,7 @@ define(`stop', substr(`$2', 2, 1))dnl
 #undef STELLA_PIN_PIN
 #undef HAVE_STELLA_PIN  /* quite a hack, but should do the job *g*    \
                            this is just to keep the preprocessor from \
-			   complaining and get the port masks right. */
+               complaining and get the port masks right. */
 pin(STELLA_PIN, format(`P%s%d', pinname, itr))
   ' )dnl
 #define STELLA_PINS_PORT1 eval(stop-start+1)
@@ -304,7 +304,7 @@ define(`stop', substr(`$2', 2, 1))dnl
 #undef STELLA_PIN_PIN
 #undef HAVE_STELLA_PIN  /* quite a hack, but should do the job *g*    \
                            this is just to keep the preprocessor from \
-			   complaining and get the port masks right. */
+               complaining and get the port masks right. */
 pin(STELLA_PIN, format(`P%s%d', pinname, itr))
   ' )dnl
 #define STELLA_PINS_PORT2 eval(stop-start+1)
